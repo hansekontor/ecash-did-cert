@@ -1,0 +1,16 @@
+{
+  "name": "ecash-did-cert",
+  "version": "1.0.0",
+  "description": "DID Tools for eCash",
+  "main": "index.js",
+  "author": "hansekontor",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hansekontor/ecash-did-cert.git"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "bcash": "https://github.com/badger-cash/bcash.git#ecash"
+  }
+}
