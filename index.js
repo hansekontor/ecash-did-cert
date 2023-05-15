@@ -117,7 +117,7 @@ class VC {
             offset += 1; 
             console.log("expirationLen", expirationLen);
             const expirationBuf = vcBuffer.subarray(offset, offset + expirationLen);
-            const expiration = U64.fromBE(expirationBuf, 0).lo;
+            const expiration = expirationBuf.readInt32LE();
             console.log("expiration", expiration);
             offset += expirationLen;
             let claimLen = vcBuffer.readInt8(offset);
@@ -161,6 +161,8 @@ class VC {
 
     // builds OP_RETURN script to create a VC
     buildCreationScript() {
+        const expirationBuf = Buffer.alloc(4);
+        expirationBuf.writeInt32LE(this.credentialSubject.expirationBlock);
         this.setCredentialTypeData(); 
         const claimString = this.buildClaimString();
         // console.log("claimString", claimString);
@@ -173,7 +175,7 @@ class VC {
             .pushData(Buffer.from(this.method, 'ascii'))
             .pushData(Buffer.from("C", 'ascii'))
             .pushData(Buffer.from(this.credentialTypeCode, 'ascii'))
-            .pushData(Buffer.from(U64(this.credentialSubject.expirationBlock).toBE(Buffer))) 
+            .pushData(expirationBuf) 
             .pushData(Buffer.from(claimString, 'ascii'))
             .compile();
 
@@ -182,8 +184,9 @@ class VC {
 
     // builds an OP_RETURN script to update an existing Verifiable Credential
     buildUpdateScript() {
+        const expirationBuf = Buffer.alloc(4);
+        expirationBuf.writeInt32LE(this.credentialSubject.expirationBlock);
         const claimString = this.buildClaimString();        
-
         const opReturn = new bcash.Script()
             .pushSym('return')
             .pushData(Buffer.concat([
@@ -194,7 +197,7 @@ class VC {
             .pushData(Buffer.from("U", 'ascii'))
             .pushData(Buffer.from(this.credentialTypeCode, 'ascii'))
             .pushData(Buffer.from(this.referenceId, 'ascii'))
-            .pushData(Buffer.from(U64(this.credentialSubject.expirationBlock).toBE(Buffer)))
+            .pushData(Buffer.from(expirationBuf))
             .pushData(Buffer.from(claimString, 'ascii'))
             .compile();
 
