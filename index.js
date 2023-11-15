@@ -1,4 +1,4 @@
-const bcash = require('bcash');
+const bcash = require('@hansekontor/checkout-components');
 const axios = require('axios');
 const { U64 } = require('n64');
 
@@ -18,7 +18,7 @@ class VC {
         this.credentialSubject = {
             id: options.subjectAddress ? `did:cert:${options.subjectAddress.split(':')[1]}` : undefined, 
             claims: options.claims || {},             
-            expirationBlock: options.expirationBlock || undefined
+            expirationBlock: options.expirationBlock || 0
         };
 
         // additional properties
@@ -117,7 +117,7 @@ class VC {
             offset += 1; 
             console.log("expirationLen", expirationLen);
             const expirationBuf = vcBuffer.subarray(offset, offset + expirationLen);
-            const expiration = expirationBuf.readInt32LE();
+            const expiration = expirationBuf.readInt32();
             console.log("expiration", expiration);
             offset += expirationLen;
             let claimLen = vcBuffer.readInt8(offset);
@@ -162,7 +162,7 @@ class VC {
     // builds OP_RETURN script to create a VC
     buildCreationScript() {
         const expirationBuf = Buffer.alloc(4);
-        expirationBuf.writeInt32LE(this.credentialSubject.expirationBlock);
+        expirationBuf.writeInt32BE(this.credentialSubject.expirationBlock);
         this.setCredentialTypeData(); 
         const claimString = this.buildClaimString();
         // console.log("claimString", claimString);
@@ -185,7 +185,7 @@ class VC {
     // builds an OP_RETURN script to update an existing Verifiable Credential
     buildUpdateScript() {
         const expirationBuf = Buffer.alloc(4);
-        expirationBuf.writeInt32LE(this.credentialSubject.expirationBlock);
+        expirationBuf.writeInt32BE(this.credentialSubject.expirationBlock);
         const claimString = this.buildClaimString();        
         const opReturn = new bcash.Script()
             .pushSym('return')
