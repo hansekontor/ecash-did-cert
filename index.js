@@ -163,6 +163,8 @@ class VC {
     buildCreationScript() {
         const expirationBuf = Buffer.alloc(4);
         expirationBuf.writeInt32BE(this.credentialSubject.expirationBlock);
+        const typeBuf = Buffer.alloc(4);
+        typeBuf.write(this.credentialTypeCode, 'ascii');
         this.setCredentialTypeData(); 
         const claimString = this.buildClaimString();
         // console.log("claimString", claimString);
@@ -174,7 +176,7 @@ class VC {
             ]))
             .pushData(Buffer.from(this.method, 'ascii'))
             .pushData(Buffer.from("C", 'ascii'))
-            .pushData(Buffer.from(this.credentialTypeCode, 'ascii'))
+            .pushData(typeBuf)
             .pushData(expirationBuf) 
             .pushData(Buffer.from(claimString, 'ascii'))
             .compile();
@@ -186,6 +188,8 @@ class VC {
     buildUpdateScript() {
         const expirationBuf = Buffer.alloc(4);
         expirationBuf.writeInt32BE(this.credentialSubject.expirationBlock);
+        const typeBuf = Buffer.alloc(4);
+        typeBuf.write(this.credentialTypeCode, 'ascii');
         const claimString = this.buildClaimString();        
         const opReturn = new bcash.Script()
             .pushSym('return')
@@ -195,9 +199,9 @@ class VC {
             ]))
             .pushData(Buffer.from(this.method, 'ascii'))
             .pushData(Buffer.from("U", 'ascii'))
-            .pushData(Buffer.from(this.credentialTypeCode, 'ascii'))
+            .pushData(typeBuf)
             .pushData(Buffer.from(this.referenceId, 'ascii'))
-            .pushData(Buffer.from(expirationBuf))
+            .pushData(expirationBuf)
             .pushData(Buffer.from(claimString, 'ascii'))
             .compile();
 
@@ -206,6 +210,8 @@ class VC {
 
     // build an OP_RETURN script to delete an existing Verifiable Credential 
     buildDeleteScript(){
+        const typeBuf = Buffer.alloc(4);
+        typeBuf.write(this.credentialTypeCode, 'ascii');
         const opReturn = new bcash.Script()
             .pushSym('return')
             .pushData(Buffer.concat([
@@ -214,7 +220,7 @@ class VC {
             ]))
             .pushData(Buffer.from(this.method, 'ascii'))
             .pushData(Buffer.from("D", 'ascii'))
-            .pushData(Buffer.from(this.credentialTypeCode, 'ascii'))
+            .pushData(typeBuf)
             .pushData(Buffer.from(this.referenceId, 'ascii'))
             .compile();
 
@@ -270,9 +276,9 @@ class VC {
 
     // sets claimKeys, claimValues and credential type
     setCredentialTypeData() {
-        const isValidType = this.credentialTypeCode.length === 4;
+        const isValidType = this.credentialTypeCode.length <= 4;
         if (!isValidType) {
-            throw new Error(`credential type code must have 4 digits: ${this.credentialTypeCode}`);
+            throw new Error(`credential type code must have 1 to 4 digits: ${this.credentialTypeCode}`);
         }
         const isEmptyType = this.credentialTypeCode === "0000";
         let claimKeys = [], isKnownType, credentialTypeName; 
